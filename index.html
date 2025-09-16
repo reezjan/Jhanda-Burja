@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Under and Over 7 Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: radial-gradient(circle, #111, #000);
+      color: white;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    h1 {
+      color: #f1c40f;
+      text-shadow: 2px 2px 6px #000;
+    }
+
+    .dice {
+      font-size: 80px;
+      margin: 10px;
+      display: inline-block;
+      transition: transform 0.3s ease;
+      filter: drop-shadow(0 0 10px #00f);
+      animation: none;
+    }
+
+    .rolling {
+      animation: roll 1s ease-in-out infinite, glow 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes roll {
+      0% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(90deg) scale(1.2); }
+      50% { transform: rotate(180deg) scale(1); }
+      75% { transform: rotate(270deg) scale(1.2); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    @keyframes glow {
+      0% { filter: drop-shadow(0 0 10px #f39c12); }
+      100% { filter: drop-shadow(0 0 20px #e74c3c); }
+    }
+
+    .btns {
+      margin: 20px;
+    }
+
+    button {
+      margin: 5px;
+      padding: 15px 30px;
+      font-size: 20px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 0 10px #000;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #0072ff, #00c6ff);
+      transform: scale(1.05);
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 24px;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #000;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Under and Over 7</h1>
+  <div class="dice" id="dice1">🎲</div>
+  <div class="dice" id="dice2">🎲</div>
+
+  <div class="btns">
+    <button onclick="play('under')">Under 7</button>
+    <button onclick="play('seven')">Exactly 7</button>
+    <button onclick="play('over')">Over 7</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    function rollDiceAnimation(diceEl) {
+      const diceFaces = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+      diceEl.classList.add("rolling");
+
+      let rollCount = 10;
+      let interval = setInterval(() => {
+        diceEl.textContent = diceFaces[Math.floor(Math.random() * 6)];
+        rollCount--;
+        if (rollCount <= 0) {
+          clearInterval(interval);
+          diceEl.classList.remove("rolling");
+        }
+      }, 100);
+    }
+
+    function biasedRoll() {
+      const biasTable = [
+        [1,1], [1,2], [2,1],
+        [1,3], [3,1], [2,2],
+        [1,4], [4,1], [2,3], [3,2],
+        [1,5], [5,1], [2,4], [4,2], [3,3],
+        [1,6], [6,1], [2,5], [5,2], [3,4], [4,3],
+        [2,6], [6,2], [3,5], [5,3], [4,4],
+        [3,6], [6,3], [4,5], [5,4],
+        [4,6], [6,4], [5,5],
+        [5,6], [6,5],
+        [6,6]
+      ];
+
+      let biased = [];
+      biasTable.forEach(pair => {
+        const sum = pair[0] + pair[1];
+        if (sum === 7) {
+          biased.push(pair); // smaller chance
+        } else if ((sum < 7 || sum > 7) && Math.random() < 0.6) {
+          biased.push(pair);
+        }
+      });
+
+      if (biased.length === 0) biased = biasTable;
+
+      return biased[Math.floor(Math.random() * biased.length)];
+    }
+
+    function play(choice) {
+      const dice1 = document.getElementById("dice1");
+      const dice2 = document.getElementById("dice2");
+
+      rollDiceAnimation(dice1);
+      rollDiceAnimation(dice2);
+
+      setTimeout(() => {
+        const [d1, d2] = biasedRoll();
+        const total = d1 + d2;
+        dice1.textContent = ["⚀","⚁","⚂","⚃","⚄","⚅"][d1-1];
+        dice2.textContent = ["⚀","⚁","⚂","⚃","⚄","⚅"][d2-1];
+
+        let win = false;
+        if (choice === 'under' && total < 7) win = true;
+        else if (choice === 'over' && total > 7) win = true;
+        else if (choice === 'seven' && total === 7) win = true;
+
+        document.getElementById("result").innerText =
+          `You chose ${choice.toUpperCase()} | Rolled: ${total} → ${win ? "You WIN! 🎉" : "You LOSE 💀"}`;
+      }, 1000);
+    }
+  </script>
+
+</body>
+</html>
