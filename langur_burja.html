@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Langur Burja - Multi Bet</title>
+  <style>
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: #111;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #f1c40f;
+    }
+    .symbols {
+      display: grid;
+      grid-template-columns: repeat(3, auto);
+      gap: 10px;
+      margin: 20px auto;
+      max-width: 400px;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #222;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    input[type="checkbox"] {
+      transform: scale(1.5);
+    }
+    .dice-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .dice {
+      font-size: 40px;
+      width: 60px;
+      height: 60px;
+      background: #333;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: roll 0.5s ease-in-out;
+    }
+    @keyframes roll {
+      0% { transform: rotateY(0); }
+      100% { transform: rotateY(360deg); }
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    td, th {
+      border: 1px solid white;
+      padding: 8px 12px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      font-size: 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00c6ff;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Langur Burja 🎲 Multi Bet</h1>
+<p>Select multiple symbols to bet on:</p>
+
+<form id="betForm" class="symbols">
+  <!-- Dynamic checkboxes -->
+</form>
+
+<button onclick="rollDice()">🎲 Roll Dice</button>
+
+<div class="dice-container" id="diceContainer"></div>
+
+<h2>Results</h2>
+<table>
+  <thead>
+    <tr><th>Symbol</th><th>Matches</th><th>Result</th></tr>
+  </thead>
+  <tbody id="resultsTable"></tbody>
+</table>
+
+<script>
+  const symbols = [
+    { name: 'हुकुम', emoji: '♠' },
+    { name: 'बुर्ज', emoji: '👑' },
+    { name: 'पान', emoji: '❤️' },
+    { name: 'चिडी', emoji: '♣️' },
+    { name: 'झण्डा', emoji: '🚩' },
+    { name: 'ईंट', emoji: '♦️' }
+  ];
+
+  const form = document.getElementById("betForm");
+
+  // Render symbol checkboxes
+  symbols.forEach((s, i) => {
+    const label = document.createElement("label");
+    label.innerHTML = `<input type="checkbox" value="${s.name}" id="bet${i}"> ${s.emoji} ${s.name}`;
+    form.appendChild(label);
+  });
+
+  function getBiasedDiceResult(selectedSymbols) {
+    const results = [];
+    const weights = symbols.map(s => selectedSymbols.includes(s.name) ? 5 : 15);
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+    for (let i = 0; i < 6; i++) {
+      let rand = Math.random() * totalWeight;
+      for (let j = 0; j < symbols.length; j++) {
+        if (rand < weights[j]) {
+          results.push(symbols[j]);
+          break;
+        }
+        rand -= weights[j];
+      }
+    }
+    return results;
+  }
+
+  function rollDice() {
+    const selectedSymbols = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    const resultsTable = document.getElementById("resultsTable");
+    const diceContainer = document.getElementById("diceContainer");
+
+    if (selectedSymbols.length === 0) {
+      alert("Please select at least one symbol to bet on.");
+      return;
+    }
+
+    diceContainer.innerHTML = '';
+    resultsTable.innerHTML = '';
+
+    const diceResults = getBiasedDiceResult(selectedSymbols);
+    diceResults.forEach(res => {
+      const dice = document.createElement("div");
+      dice.className = "dice";
+      dice.textContent = res.emoji;
+      diceContainer.appendChild(dice);
+    });
+
+    selectedSymbols.forEach(symName => {
+      const count = diceResults.filter(s => s.name === symName).length;
+      const symbol = symbols.find(s => s.name === symName);
+      const result = count > 0 ? `✅ Win (${count})` : '❌ Lose';
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${symbol.emoji} ${symbol.name}</td>
+        <td>${count}</td>
+        <td>${result}</td>
+      `;
+      resultsTable.appendChild(row);
+    });
+  }
+</script>
+
+</body>
+</html>
